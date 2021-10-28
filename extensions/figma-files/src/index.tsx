@@ -5,10 +5,7 @@ import {
   showToast,
   ToastStyle,
   getPreferenceValues,
-  setLocalStorageItem,
-  getLocalStorageItem,
   environment,
-  removeLocalStorageItem,
   Icon,
   CopyToClipboardAction,
   OpenAction,
@@ -19,6 +16,8 @@ import TimeAgo from "javascript-time-ago"
 import en from "javascript-time-ago/locale/en.json"
 import fetch from "node-fetch"
 import { useState, useEffect } from "react"
+import { loadFiles, storeFiles, clearFiles, loadPages, storePages } from "./cache"
+import { ProjectFiles, File, TeamProjects, FileDetail, Node } from "./types"
 
 TimeAgo.addDefaultLocale(en)
 const timeAgo = new TimeAgo("en-US")
@@ -80,6 +79,9 @@ function FileListItem(props: { file: File }) {
             <OpenProjectFileAction file={props.file} />
             <CopyToClipboardAction content={`https://figma.com/file/${file.key}`} />
           </ActionPanel.Section>
+          <ActionPanel.Section>
+            <OpenPageSubmenuAction file={file} />
+          </ActionPanel.Section>
           <DevelopmentActionSection />
         </ActionPanel>
       }
@@ -130,6 +132,37 @@ function DevelopmentActionSection() {
   ) : null
 }
 
+function OpenPageSubmenuAction(props: { file: File }) {
+  const [pages, setPages] = useState<Node[]>()
+
+  useEffect(() => {
+    console.debug("Fetch pages...")
+    fetchPages(props.file).then(setPages)
+    async function fetch() {
+      const cachedPages = await loadPages(props.file)
+
+      if (cachedPages) {
+        setPages(cachedPages)
+      }
+
+      const newPages = await fetchPages(props.file)
+      setPages(newPages)
+
+      await storePages(newPages, props.file)
+    }
+
+    fetch()
+  }, [props.file])
+
+  return (
+    <ActionPanel.Submenu icon={Icon.Document} title="Open Page" shortcut={{ modifiers: ["cmd"], key: "p" }}>
+      {pages?.map((p) => (
+        <OpenInBrowserAction key={p.id} title={p.name} url={`figma://file/${props.file.key}?node-id=${p.id}`} />
+      ))}
+    </ActionPanel.Submenu>
+  )
+}
+
 async function fetchTeamProjects(): Promise<TeamProjects> {
   const { PERSONAL_ACCESS_TOKEN, TEAM_ID } = getPreferenceValues()
   try {
@@ -175,40 +208,23 @@ async function fetchFiles(): Promise<ProjectFiles[]> {
   return Promise.all(projects) as Promise<ProjectFiles[]>
 }
 
-const PROJECT_FILES_CACHE_KEY = "PROJECT_FILES"
+async function fetchPages(file: File): Promise<Node[]> {
+  const { PERSONAL_ACCESS_TOKEN } = getPreferenceValues()
 
-async function storeFiles(projectFiles: ProjectFiles[]) {
-  const data = JSON.stringify(projectFiles)
-  await setLocalStorageItem("PROJECT_FILES", data)
-}
+  try {
+    const response = await fetch(`https://api.figma.com/v1/files/${file.key}?depth=1`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Figma-Token": PERSONAL_ACCESS_TOKEN,
+      },
+    })
 
-async function loadFiles() {
-  const data: string | undefined = await getLocalStorageItem(PROJECT_FILES_CACHE_KEY)
-  return data !== undefined ? JSON.parse(data) : undefined
-}
-
-async function clearFiles() {
-  return await removeLocalStorageItem(PROJECT_FILES_CACHE_KEY)
-}
-
-type Project = {
-  id: string
-  name: string
-}
-
-type TeamProjects = {
-  name: string
-  projects: Project[]
-}
-
-type ProjectFiles = {
-  files: File[]
-  name: string
-}
-
-type File = {
-  key: string
-  last_modified: string
-  name: string
-  thumbnail_url: string
+    const json = (await response.json()) as FileDetail
+    return json.document.children
+  } catch (error) {
+    console.error(error)
+    showToast(ToastStyle.Failure, "Could not load pages")
+    return Promise.resolve([])
+  }
 }
