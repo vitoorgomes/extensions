@@ -1,29 +1,26 @@
-type Project = {
+interface Project {
   id: string
   name: string
 }
 
-export type TeamProjects = {
+export interface TeamProjects {
   name: string
   projects: Project[]
 }
 
-export type ProjectFiles = {
+export interface ProjectFiles {
   files: File[]
   name: string
 }
 
-export type File = {
+export interface File {
   key: string
   last_modified: string
   name: string
   thumbnail_url: string
 }
 
-export type FileDetail = {
-  name: string
-  lastModified: string
-  thumbnailUrl: string
+export interface FileDetail {
   document: Node
 }
 

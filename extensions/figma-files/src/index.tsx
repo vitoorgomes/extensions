@@ -136,8 +136,6 @@ function OpenPageSubmenuAction(props: { file: File }) {
   const [pages, setPages] = useState<Node[]>()
 
   useEffect(() => {
-    console.debug("Fetch pages...")
-    fetchPages(props.file).then(setPages)
     async function fetch() {
       const cachedPages = await loadPages(props.file)
 
@@ -150,6 +148,8 @@ function OpenPageSubmenuAction(props: { file: File }) {
 
       await storePages(newPages, props.file)
     }
+
+    console.debug("Fetch pages...")
 
     fetch()
   }, [props.file])
