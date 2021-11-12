@@ -14,8 +14,8 @@ import {
 } from "@raycast/api"
 import TimeAgo from "javascript-time-ago"
 import en from "javascript-time-ago/locale/en.json"
-import fetch from "node-fetch"
-import { useState, useEffect } from "react"
+import fetch, { AbortError } from "node-fetch"
+import { useState, useEffect, useRef } from "react"
 import { loadFiles, storeFiles, clearFiles, loadPages, storePages } from "./cache"
 import { ProjectFiles, File, TeamProjects, FileDetail, Node } from "./types"
 
@@ -134,24 +134,30 @@ function DevelopmentActionSection() {
 
 function OpenPageSubmenuAction(props: { file: File }) {
   const [pages, setPages] = useState<Node[]>()
+  const abort = useRef<AbortController>()
 
   useEffect(() => {
     async function fetch() {
+      abort.current?.abort()
+      abort.current = new AbortController()
+
       const cachedPages = await loadPages(props.file)
 
       if (cachedPages) {
         setPages(cachedPages)
       }
 
-      const newPages = await fetchPages(props.file)
+      const newPages = await fetchPages(props.file, abort.current?.signal)
       setPages(newPages)
 
       await storePages(newPages, props.file)
     }
 
-    console.debug("Fetch pages...")
-
     fetch()
+
+    return () => {
+      abort.current?.abort()
+    }
   }, [props.file])
 
   return (
@@ -208,7 +214,7 @@ async function fetchFiles(): Promise<ProjectFiles[]> {
   return Promise.all(projects) as Promise<ProjectFiles[]>
 }
 
-async function fetchPages(file: File): Promise<Node[]> {
+async function fetchPages(file: File, signal?: AbortSignal): Promise<Node[]> {
   const { PERSONAL_ACCESS_TOKEN } = getPreferenceValues()
 
   try {
@@ -218,11 +224,16 @@ async function fetchPages(file: File): Promise<Node[]> {
         "Content-Type": "application/json",
         "X-Figma-Token": PERSONAL_ACCESS_TOKEN,
       },
+      signal,
     })
 
     const json = (await response.json()) as FileDetail
     return json.document.children
   } catch (error) {
+    if (error instanceof AbortError) {
+      return Promise.resolve([])
+    }
+
     console.error(error)
     showToast(ToastStyle.Failure, "Could not load pages")
     return Promise.resolve([])
