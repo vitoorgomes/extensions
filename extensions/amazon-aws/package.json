@@ -6,15 +6,31 @@
   "icon": "command-icon.png",
   "author": "Falcon",
   "contributors": [
-    "Hodglim"
+    "Hodglim",
+    "JonathanWbn",
+    "gebeto",
+    "mommertf",
+    "duboiss",
+    "lbergantin"
+  ],
+  "categories": [
+    "Developer Tools",
+    "Productivity"
   ],
   "license": "MIT",
   "commands": [
     {
-      "name": "index",
+      "name": "ec2",
       "title": "EC2 Instances",
       "subtitle": "Amazon AWS",
       "description": "List and Filter All your EC2 Instances",
+      "mode": "view"
+    },
+    {
+      "name": "ecs",
+      "title": "ECS Clusters",
+      "subtitle": "Amazon AWS",
+      "description": "List and Filter All your ECS Clusters",
       "mode": "view"
     },
     {
@@ -37,6 +53,20 @@
       "subtitle": "Amazon AWS",
       "description": "Launch AWS console links",
       "mode": "view"
+    },
+    {
+      "name": "cloudformation",
+      "title": "CloudFormation Stacks",
+      "subtitle": "Amazon AWS",
+      "description": "List All your CloudFormation Stacks",
+      "mode": "view"
+    },
+    {
+      "name": "dynamodb",
+      "title": "DynamoDB Tables",
+      "subtitle": "Amazon AWS",
+      "description": "List All your DynamoDB Tables",
+      "mode": "view"
     }
   ],
   "preferences": [
@@ -47,10 +77,18 @@
       "title": "AWS Region",
       "description": "The Region Were You Have All Your Instances",
       "placeholder": "eu-central-1"
+    },
+    {
+      "name": "aws_profile",
+      "type": "textfield",
+      "required": true,
+      "title": "AWS Profile",
+      "description": "set aws profile name",
+      "placeholder": "default"
     }
   ],
   "dependencies": {
-    "@raycast/api": "^1.25.3",
+    "@raycast/api": "^1.36.0",
     "aws-sdk": "^2.1023.0",
     "node-fetch": "^3.0.0"
   },
@@ -66,6 +104,8 @@
   },
   "scripts": {
     "build": "ray build -e dist",
-    "dev": "ray develop"
+    "dev": "ray develop",
+    "fix-lint": "ray lint --fix",
+    "lint": "ray lint"
   }
 }

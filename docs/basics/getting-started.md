@@ -4,7 +4,7 @@ description: This guide covers the prerequisites you need to start building exte
 
 # Getting Started
 
-### System requirements
+## System Requirements
 
 Before you can create your first extension, make sure you have the following prerequisites.
 
@@ -15,7 +15,7 @@ Before you can create your first extension, make sure you have the following pre
 
 ## Sign In
 
-![Opening the "Store" command in Raycast](../.gitbook/assets/store-welcome.png)
+![Opening the "Store" command in Raycast](../.gitbook/assets/welcome.png)
 
 You need to be signed in to use the following extension development commands.
 
@@ -23,3 +23,14 @@ You need to be signed in to use the following extension development commands.
 - **Create Extension:** Create new extensions from templates
 - **Import Extension:** Import extensions from source code
 - **Manage Extensions**: List and edit your published extensions
+
+## Editor/IDE Extensions
+
+You can enhance your extension development experience by installing extensions for common editors.
+
+- [Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=tonka3000.raycast)
+  - Intellisense for image assets
+  - A treeview for easier navigation (commands and preferences)
+  - VSCode commands for creating new commands and preferences
+  - The possibility to attach a node.js debugger
+  - VSCode command for command `ray` operations like `build`, `dev`, `lint`or `fix-lint`
